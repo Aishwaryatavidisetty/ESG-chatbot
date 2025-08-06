@@ -2,7 +2,9 @@
 venv/
 
 # Don't upload environment config
+config/config.py
 .env
+
 
 # Don't upload local vector DB
 vector_store/
