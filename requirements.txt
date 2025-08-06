@@ -1,10 +1,10 @@
 streamlit
-langchain
-langchain-openai
-langchain-groq
-langchain-core
-langchain-google-genai
-google-cloud-firestore
 openai
-pymupdf
+groq
+langchain
+langchain-community
+tiktoken
+PyMuPDF
+plotly
+requests
 python-dotenv
