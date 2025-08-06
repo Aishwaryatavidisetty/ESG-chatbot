@@ -1,0 +1,13 @@
+# Don't upload virtual environment
+venv/
+
+# Don't upload environment config
+.env
+
+# Don't upload local vector DB
+vector_store/
+
+# __pycache__ and other temp files
+__pycache__/
+*.pyc
+.DS_Store
