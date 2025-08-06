@@ -1,10 +1,13 @@
 streamlit
-openai
-groq
 langchain
+langchain-openai
+langchain-groq
+langchain-core
 langchain-community
-tiktoken
+langchain-google-genai
+google-cloud-firestore
+openai
 PyMuPDF
 plotly
-requests
 python-dotenv
+
