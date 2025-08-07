@@ -3,6 +3,7 @@ from langchain_groq import ChatGroq
 # We will directly use os.getenv() for the API key here.
 from config.config import GROQ_MODEL_NAME # Keep this if you're using it for model names
 import os
+import traceback # Import traceback for detailed error logging
 
 def load_llm(mode="Concise"):
     # Determine the model name based on the mode
@@ -27,6 +28,8 @@ def load_llm(mode="Concise"):
         return llm_instance
     except Exception as e:
         print(f"CRITICAL ERROR LLM: Failed to initialize ChatGroq for model {model}: {e}")
+        print("CRITICAL ERROR LLM: Full Traceback:")
+        traceback.print_exc() # Print full traceback to logs
         # Re-raise the exception to propagate it up to app.py and show in Streamlit UI
         raise
 
