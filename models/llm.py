@@ -1,8 +1,5 @@
-from langchain_groq import ChatGroq
-import streamlit as st
+from langchain_google_genai import ChatGoogleGenerativeAI
+from config.config import GEMINI_API_KEY
 
 def load_llm():
-    return ChatGroq(
-        api_key=st.secrets["GROQ_API_KEY"],
-        model="mixtral-8x7b-32768"  # or llama3-8b, llama3-70b
-    )
+    return ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=GEMINI_API_KEY)

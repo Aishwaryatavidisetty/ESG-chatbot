@@ -7,7 +7,8 @@ langchain-community
 langchain-google-genai
 google-cloud-firestore
 openai
+cohere
 PyMuPDF
 plotly
 python-dotenv
-
+sentence-transformers
