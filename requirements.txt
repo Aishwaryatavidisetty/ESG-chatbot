@@ -4,6 +4,7 @@ langchain-groq
 langchain-core
 langchain-community
 langchain-google-genai
+langchain-cohere
 google-cloud-firestore
 cohere
 PyMuPDF
@@ -12,3 +13,5 @@ python-dotenv
 sentence-transformers
 google-generativeai
 faiss-cpu
+
+
