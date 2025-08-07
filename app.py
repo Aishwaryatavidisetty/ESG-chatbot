@@ -107,6 +107,13 @@ if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
 if 'faiss_index_ready' not in st.session_state:
     st.session_state['faiss_index_ready'] = False
+# Initialize a variable to hold the current user question from chat_input
+if 'current_question' not in st.session_state:
+    st.session_state['current_question'] = ""
+# Initialize a key for the chat_input widget to allow clearing it
+if 'chat_input_key' not in st.session_state:
+    st.session_state['chat_input_key'] = 0
+
 
 if os.path.exists(FAISS_INDEX_PATH) and not st.session_state['faiss_index_ready']:
     st.session_state['faiss_index_ready'] = True
@@ -127,11 +134,13 @@ with tab1:
             st.session_state['pdf_processed'] = False
             st.session_state['faiss_index_ready'] = False
             st.session_state['chat_history'] = []
+            st.session_state['current_question'] = "" # Clear current question on re-process
+            st.session_state['chat_input_key'] += 1 # Increment key to clear input
 
             if process_pdf_for_rag(uploaded_file):
                 st.session_state['pdf_processed'] = True
                 st.session_state['faiss_index_ready'] = True
-                st.rerun() # Changed from st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Failed to process PDF. Please check the error message above and your Streamlit Cloud logs.")
         else:
@@ -149,7 +158,17 @@ with tab2:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    user_question = st.chat_input("Enter your question:", key="user_question_input", disabled=not st.session_state['faiss_index_ready'])
+    # Callback function to save the input to session state
+    def update_question():
+        st.session_state['current_question'] = st.session_state[f'user_question_input_{st.session_state["chat_input_key"]}']
+
+    # Use the key and on_change callback
+    user_question_input = st.chat_input(
+        "Enter your question:",
+        key=f"user_question_input_{st.session_state['chat_input_key']}",
+        disabled=not st.session_state['faiss_index_ready'],
+        on_change=update_question # Save the input when it changes
+    )
 
     response_mode = st.radio(
         "Select Response Mode:",
@@ -160,20 +179,23 @@ with tab2:
 
     col1, col2 = st.columns([1, 1])
     with col1:
+        # Check st.session_state.current_question instead of user_question_input
         if st.button("Get Answer", key="get_answer_button", disabled=not st.session_state['faiss_index_ready']):
-            if user_question:
-                st.session_state['chat_history'].append({"role": "user", "content": user_question})
+            if st.session_state['current_question']: # Check the stored question
+                st.session_state['chat_history'].append({"role": "user", "content": st.session_state['current_question']})
                 with st.spinner("Getting answer..."):
                     try:
-                        print(f"Attempting to call answer_with_rag for query: '{user_question}' in mode: '{response_mode}'")
+                        print(f"Attempting to call answer_with_rag for query: '{st.session_state['current_question']}' in mode: '{response_mode}'")
                         response = answer_with_rag(
-                            query=user_question,
+                            query=st.session_state['current_question'], # Use the stored question
                             mode=response_mode,
                             index_path=FAISS_INDEX_PATH
                         )
                         print(f"Received response from answer_with_rag: {response[:100]}...")
                         st.session_state['chat_history'].append({"role": "assistant", "content": response})
-                        st.rerun() # Changed from st.experimental_rerun()
+                        st.session_state['current_question'] = "" # Clear the stored question
+                        st.session_state['chat_input_key'] += 1 # Increment key to clear chat_input widget
+                        st.rerun()
                     except Exception as e:
                         st.error(f"An error occurred while getting the answer: {e}")
                         print(f"Full error during answer_with_rag call: {e}")
@@ -183,8 +205,10 @@ with tab2:
     with col2:
         if st.button("Clear Chat History", key="clear_history_button"):
             st.session_state['chat_history'] = []
+            st.session_state['current_question'] = "" # Clear current question on clear history
+            st.session_state['chat_input_key'] += 1 # Increment key to clear chat_input widget
             st.success("Chat history cleared!")
-            st.rerun() # Changed from st.experimental_rerun()
+            st.rerun()
 
 with tab3:
     st.header("ESG Alerts")
