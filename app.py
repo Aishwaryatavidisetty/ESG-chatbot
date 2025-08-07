@@ -192,13 +192,13 @@ with tab2:
                 st.session_state['chat_history'].append({"role": "user", "content": question_to_process})
                 with st.spinner("Getting answer..."):
                     try:
-                        print(f"Attempting to call answer_with_rag for query: '{question_to_process}' in mode: '{response_mode}'")
+                        print(f"DEBUG APP: Attempting to call answer_with_rag for query: '{question_to_process}' in mode: '{response_mode}'")
                         response = answer_with_rag(
                             query=question_to_process,
                             mode=response_mode,
                             index_path=FAISS_INDEX_PATH
                         )
-                        print(f"Received response from answer_with_rag: {response[:100]}...")
+                        print(f"DEBUG APP: Received response from answer_with_rag: {response[:100]}...")
                         st.session_state['chat_history'].append({"role": "assistant", "content": response})
                         
                         # Clear the chat input by incrementing its key and setting its value
@@ -208,7 +208,7 @@ with tab2:
                         st.rerun()
                     except Exception as e:
                         st.error(f"An error occurred while getting the answer: {e}")
-                        print(f"Full error during answer_with_rag call: {e}")
+                        print(f"DEBUG APP: Full error during answer_with_rag call: {e}")
                         st.warning("This could be due to an invalid API key, network issues, or a problem with the RAG chain. Check your Streamlit Cloud logs for more details.")
             else:
                 st.warning("Please enter a question.")
@@ -229,9 +229,9 @@ with tab3:
     if st.button("Generate ESG Alerts Summary", key="generate_alerts_button"):
         with st.spinner("Generating alerts summary..."):
             try:
-                print("Attempting to call fetch_esg_alerts...")
+                print("DEBUG APP: Attempting to call fetch_esg_alerts...")
                 alert_summary_list = fetch_esg_alerts()
-                print(f"Received alerts: {alert_summary_list}")
+                print(f"DEBUG APP: Received alerts: {alert_summary_list}")
                 st.subheader("Generated ESG Alert Summary:")
                 if alert_summary_list:
                     for item in alert_summary_list:
@@ -240,6 +240,6 @@ with tab3:
                     st.info("No alerts generated or found.")
             except Exception as e:
                 st.error(f"Error generating alerts: {e}")
-                print(f"Full error during fetch_esg_alerts call: {e}")
+                print(f"DEBUG APP: Full error during fetch_esg_alerts call: {e}")
                 st.warning("Ensure your alerts.py logic is correctly integrated and any required API keys are configured.")
 
