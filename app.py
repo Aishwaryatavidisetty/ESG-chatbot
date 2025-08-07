@@ -131,7 +131,7 @@ with tab1:
             if process_pdf_for_rag(uploaded_file):
                 st.session_state['pdf_processed'] = True
                 st.session_state['faiss_index_ready'] = True
-                st.experimental_rerun()
+                st.rerun() # Changed from st.experimental_rerun()
             else:
                 st.error("Failed to process PDF. Please check the error message above and your Streamlit Cloud logs.")
         else:
@@ -171,12 +171,12 @@ with tab2:
                             mode=response_mode,
                             index_path=FAISS_INDEX_PATH
                         )
-                        print(f"Received response from answer_with_rag: {response[:100]}...") # Log first 100 chars
+                        print(f"Received response from answer_with_rag: {response[:100]}...")
                         st.session_state['chat_history'].append({"role": "assistant", "content": response})
-                        st.experimental_rerun()
+                        st.rerun() # Changed from st.experimental_rerun()
                     except Exception as e:
                         st.error(f"An error occurred while getting the answer: {e}")
-                        print(f"Full error during answer_with_rag call: {e}") # Log full error
+                        print(f"Full error during answer_with_rag call: {e}")
                         st.warning("This could be due to an invalid API key, network issues, or a problem with the RAG chain. Check your Streamlit Cloud logs for more details.")
             else:
                 st.warning("Please enter a question.")
@@ -184,7 +184,7 @@ with tab2:
         if st.button("Clear Chat History", key="clear_history_button"):
             st.session_state['chat_history'] = []
             st.success("Chat history cleared!")
-            st.experimental_rerun()
+            st.rerun() # Changed from st.experimental_rerun()
 
 with tab3:
     st.header("ESG Alerts")
