@@ -1,16 +1,14 @@
 def calculate_esg_scores(text):
-    keywords = {
-        "Environmental": ["carbon", "renewable", "emissions", "climate", "energy"],
-        "Social": ["diversity", "inclusion", "health", "safety", "training"],
-        "Governance": ["board", "compliance", "audit", "transparency", "ethics"]
+    text_lower = text.lower()
+    environmental_keywords = ["emissions", "carbon", "climate", "waste", "pollution"]
+    social_keywords = ["diversity", "inclusion", "labor", "safety", "community"]
+    governance_keywords = ["compliance", "board", "ethics", "transparency", "audit"]
+
+    def score(keywords):
+        return sum(1 for word in keywords if word in text_lower) / len(keywords) * 100
+
+    return {
+        "Environmental": score(environmental_keywords),
+        "Social": score(social_keywords),
+        "Governance": score(governance_keywords),
     }
-    scores = {}
-    for category, words in keywords.items():
-        count = sum(text.lower().count(word) for word in words)
-        scores[category] = count
-    total = sum(scores.values()) or 1
-    for cat in scores:
-        scores[cat] = round((scores[cat] / total) * 100, 2)
-    return scores
-
-

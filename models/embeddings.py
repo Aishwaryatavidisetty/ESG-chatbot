@@ -1,11 +1,8 @@
-from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import CohereEmbeddings
-from langchain_core.documents import Document
+from langchain_community.vectorstores import FAISS
 from config.config import COHERE_API_KEY
 
-
-def embed_documents(texts, index_path='vector_store/faiss_index'):
-    docs = [Document(page_content=text) for text in texts]
-    embeddings = CohereEmbeddings(cohere_api_key=COHERE_API_KEY)
-    vectorstore = FAISS.from_documents(docs, embeddings)
-    vectorstore.save_local(index_path)
+def embed_documents(docs, index_path="vector_store/faiss_index"):
+    embeddings = CohereEmbeddings(cohere_api_key=COHERE_API_KEY, user_agent="esg-chatbot")
+    db = FAISS.from_texts(docs, embedding=embeddings)
+    db.save_local(index_path)
