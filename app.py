@@ -8,7 +8,6 @@ from dotenv import load_dotenv # To load environment variables locally
 try:
     from models.llm import load_llm
     from utils.rag_utils import answer_with_rag
-    # Assuming alerts.py is in the utils directory and has a function for alerts
     from utils.alerts import fetch_esg_alerts # Assuming this function exists in alerts.py
     # from utils.firestore_utils import ... # If you need to use Firestore for chat history or persistent PDF data
     # from config.config import GROQ_API_KEY, COHERE_API_KEY, GROQ_MODEL_NAME # Assuming config.py loads these
@@ -21,6 +20,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import CohereEmbeddings
 from langchain_community.vectorstores import FAISS # Needed for saving the index
+from cohere.core.api_error import ApiError as CohereApiError # Specific Cohere API error
 
 # Load environment variables (important for local testing, Streamlit Cloud handles secrets)
 load_dotenv()
@@ -31,9 +31,19 @@ load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 
-if not GROQ_API_KEY or not COHERE_API_KEY:
-    st.error("API keys for Groq or Cohere are not set. Please ensure GROQ_API_KEY and COHERE_API_KEY are configured in your environment variables or Streamlit secrets.")
-    st.stop() # Stop the app if API keys are missing
+# --- Critical API Key Validation ---
+if not GROQ_API_KEY:
+    st.error("GROQ_API_KEY is not set. Please configure it in your environment variables or Streamlit secrets.")
+    st.stop() # Stop the app if essential API key is missing
+
+if not COHERE_API_KEY:
+    st.error("COHERE_API_KEY is not set. This key is required for PDF processing (embeddings). Please configure it in your environment variables or Streamlit secrets.")
+    st.stop() # Stop the app if essential API key is missing
+
+# Print a masked version of the keys to logs for debugging (NOT to UI)
+print(f"GROQ_API_KEY loaded: {'Yes' if GROQ_API_KEY else 'No'}, starts with: {GROQ_API_KEY[:5] if GROQ_API_KEY else 'N/A'}")
+print(f"COHERE_API_KEY loaded: {'Yes' if COHERE_API_KEY else 'No'}, starts with: {COHERE_API_KEY[:5] if COHERE_API_KEY else 'N/A'}")
+
 
 # --- Constants ---
 FAISS_INDEX_PATH = 'vector_store/faiss_index' # Path to store the FAISS index
@@ -61,7 +71,20 @@ def process_pdf_for_rag(uploaded_file):
             texts = text_splitter.split_documents(documents)
 
             # Create embeddings
-            embeddings = CohereEmbeddings(cohere_api_key=COHERE_API_KEY, model="embed-english-light-v3.0")
+            st.info("Initializing Cohere Embeddings...")
+            try:
+                embeddings = CohereEmbeddings(cohere_api_key=COHERE_API_KEY, model="embed-english-light-v3.0")
+            except CohereApiError as e:
+                st.error(f"Cohere API Error during embeddings initialization: {e}. This often means your COHERE_API_KEY is invalid or has insufficient permissions.")
+                print(f"Cohere API Error details: {e}") # Log full error for debugging
+                os.remove(temp_file_path) # Clean up temp file
+                return False
+            except Exception as e:
+                st.error(f"Unexpected error initializing Cohere Embeddings: {e}. Please check your internet connection or Cohere API key.")
+                print(f"Unexpected Embeddings Error details: {e}") # Log full error for debugging
+                os.remove(temp_file_path) # Clean up temp file
+                return False
+
 
             # Create FAISS index from documents and save it locally
             st.info("Creating FAISS index...")
@@ -78,6 +101,10 @@ def process_pdf_for_rag(uploaded_file):
             return True
         except Exception as e:
             st.error(f"Error processing PDF: {e}")
+            print(f"Full PDF processing error: {e}") # Log full error for debugging
+            # Attempt to clean up temp file even if other errors occur
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
             return False
     return False
 
@@ -96,6 +123,7 @@ if 'faiss_index_ready' not in st.session_state:
     st.session_state['faiss_index_ready'] = False
 
 # Check if FAISS index already exists (e.g., from a previous run in the same session)
+# This check is useful for local development, but less reliable on ephemeral cloud systems.
 if os.path.exists(FAISS_INDEX_PATH) and not st.session_state['faiss_index_ready']:
     st.session_state['faiss_index_ready'] = True
     st.session_state['pdf_processed'] = True # Assume PDF was processed if index exists
@@ -111,6 +139,7 @@ with tab1:
     uploaded_file = st.file_uploader("Upload your ESG PDF document", type="pdf", key="pdf_uploader")
 
     if uploaded_file:
+        # Check if a new file is uploaded or if re-process button is clicked
         if not st.session_state['pdf_processed'] or st.button("Re-process this PDF", key="reprocess_button"):
             # Clear previous state if re-processing
             st.session_state['pdf_processed'] = False
@@ -122,7 +151,7 @@ with tab1:
                 st.session_state['faiss_index_ready'] = True
                 st.experimental_rerun() # Rerun to update state and UI
             else:
-                st.error("Failed to process PDF.")
+                st.error("Failed to process PDF. Please check the error message above and your Streamlit Cloud logs.")
         else:
             st.info(f"'{uploaded_file.name}' is already processed. You can re-process it if needed.")
 
@@ -157,8 +186,6 @@ with tab2:
                 with st.spinner("Getting answer..."):
                     try:
                         # Call your actual RAG utility
-                        # The 'user_agent' error might be related to the underlying Groq/Cohere client.
-                        # Ensure your API keys are correct and network is stable.
                         response = answer_with_rag(
                             query=user_question,
                             mode=response_mode, # Pass 'Concise' or 'Detailed'
@@ -185,8 +212,7 @@ with tab3:
         with st.spinner("Generating alerts summary..."):
             try:
                 # Call your actual alert generation function from alerts.py
-                # Make sure 'generate_alert_summary' is imported from alerts.py
-                alert_summary = generate_alert_summary()
+                alert_summary = fetch_esg_alerts()
                 st.subheader("Generated ESG Alert Summary:")
                 st.write(alert_summary)
             except Exception as e:
