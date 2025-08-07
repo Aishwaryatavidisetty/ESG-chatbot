@@ -9,7 +9,7 @@ try:
     from models.llm import load_llm
     from utils.rag_utils import answer_with_rag
     # Assuming alerts.py is in the utils directory and has a function for alerts
-    from utils.alerts import generate_alert_summary # Assuming this function exists in alerts.py
+    from utils.alerts import fetch_esg_alerts # Assuming this function exists in alerts.py
     # from utils.firestore_utils import ... # If you need to use Firestore for chat history or persistent PDF data
     # from config.config import GROQ_API_KEY, COHERE_API_KEY, GROQ_MODEL_NAME # Assuming config.py loads these
 except ImportError as e:
