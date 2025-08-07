@@ -1,6 +1,6 @@
 from langchain_community.embeddings import CohereEmbeddings
 from langchain.vectorstores import FAISS
-from config import COHERE_API_KEY
+from config.config import COHERE_API_KEY
 import os
 
 def embed_documents(texts, index_path='vector_store/faiss_index'):
