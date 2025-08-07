@@ -107,9 +107,6 @@ if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
 if 'faiss_index_ready' not in st.session_state:
     st.session_state['faiss_index_ready'] = False
-# Initialize a variable to hold the current user question from chat_input
-if 'current_question' not in st.session_state:
-    st.session_state['current_question'] = ""
 # Initialize a key for the chat_input widget to allow clearing it
 if 'chat_input_key' not in st.session_state:
     st.session_state['chat_input_key'] = 0
@@ -134,8 +131,11 @@ with tab1:
             st.session_state['pdf_processed'] = False
             st.session_state['faiss_index_ready'] = False
             st.session_state['chat_history'] = []
-            st.session_state['current_question'] = "" # Clear current question on re-process
             st.session_state['chat_input_key'] += 1 # Increment key to clear input
+            # Ensure the chat input value for the old key is cleared immediately
+            if f'user_question_input_{st.session_state["chat_input_key"] - 1}' in st.session_state:
+                st.session_state[f'user_question_input_{st.session_state["chat_input_key"] - 1}'] = ""
+
 
             if process_pdf_for_rag(uploaded_file):
                 st.session_state['pdf_processed'] = True
@@ -158,16 +158,14 @@ with tab2:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Callback function to save the input to session state
-    def update_question():
-        st.session_state['current_question'] = st.session_state[f'user_question_input_{st.session_state["chat_input_key"]}']
+    # Define the key for the current chat input
+    current_chat_input_key = f"user_question_input_{st.session_state['chat_input_key']}"
 
-    # Use the key and on_change callback
-    user_question_input = st.chat_input(
+    # Get the user's question. Streamlit automatically stores its value in st.session_state[key]
+    user_question = st.chat_input(
         "Enter your question:",
-        key=f"user_question_input_{st.session_state['chat_input_key']}",
-        disabled=not st.session_state['faiss_index_ready'],
-        on_change=update_question # Save the input when it changes
+        key=current_chat_input_key,
+        disabled=not st.session_state['faiss_index_ready']
     )
 
     response_mode = st.radio(
@@ -179,22 +177,34 @@ with tab2:
 
     col1, col2 = st.columns([1, 1])
     with col1:
-        # Check st.session_state.current_question instead of user_question_input
-        if st.button("Get Answer", key="get_answer_button", disabled=not st.session_state['faiss_index_ready']):
-            if st.session_state['current_question']: # Check the stored question
-                st.session_state['chat_history'].append({"role": "user", "content": st.session_state['current_question']})
+        # The 'Get Answer' button is clicked OR the user pressed Enter in chat_input
+        # We check if user_question has a value AND if it's not already processed
+        if st.button("Get Answer", key="get_answer_button", disabled=not st.session_state['faiss_index_ready']) or \
+           (user_question and user_question != st.session_state.get(current_chat_input_key + "_processed", "")):
+            
+            # Use the value directly from st.session_state as soon as the input is submitted
+            question_to_process = st.session_state.get(current_chat_input_key, "")
+
+            if question_to_process:
+                # Mark this question as processed to avoid double processing on rerun
+                st.session_state[current_chat_input_key + "_processed"] = question_to_process
+
+                st.session_state['chat_history'].append({"role": "user", "content": question_to_process})
                 with st.spinner("Getting answer..."):
                     try:
-                        print(f"Attempting to call answer_with_rag for query: '{st.session_state['current_question']}' in mode: '{response_mode}'")
+                        print(f"Attempting to call answer_with_rag for query: '{question_to_process}' in mode: '{response_mode}'")
                         response = answer_with_rag(
-                            query=st.session_state['current_question'], # Use the stored question
+                            query=question_to_process,
                             mode=response_mode,
                             index_path=FAISS_INDEX_PATH
                         )
                         print(f"Received response from answer_with_rag: {response[:100]}...")
                         st.session_state['chat_history'].append({"role": "assistant", "content": response})
-                        st.session_state['current_question'] = "" # Clear the stored question
-                        st.session_state['chat_input_key'] += 1 # Increment key to clear chat_input widget
+                        
+                        # Clear the chat input by incrementing its key and setting its value
+                        st.session_state['chat_input_key'] += 1
+                        st.session_state[f"user_question_input_{st.session_state['chat_input_key']}"] = "" # Set new key's value to empty
+                        
                         st.rerun()
                     except Exception as e:
                         st.error(f"An error occurred while getting the answer: {e}")
@@ -205,8 +215,10 @@ with tab2:
     with col2:
         if st.button("Clear Chat History", key="clear_history_button"):
             st.session_state['chat_history'] = []
-            st.session_state['current_question'] = "" # Clear current question on clear history
             st.session_state['chat_input_key'] += 1 # Increment key to clear chat_input widget
+            # Ensure the chat input value for the old key is cleared immediately
+            if f'user_question_input_{st.session_state["chat_input_key"] - 1}' in st.session_state:
+                st.session_state[f'user_question_input_{st.session_state["chat_input_key"] - 1}'] = ""
             st.success("Chat history cleared!")
             st.rerun()
 
