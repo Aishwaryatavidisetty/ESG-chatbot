@@ -1,7 +1,7 @@
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain_community.embeddings import CohereEmbeddings
-from config import COHERE_API_KEY
+from config.config import COHERE_API_KEY
 from models.llm import load_llm
 
 
