@@ -1,12 +1,10 @@
-import google.generativeai as genai
-from config.config import GEMINI_API_KEY
+from models.llm import load_llm
 
 def fetch_esg_alerts():
     try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-pro-1.5")  # ✅ Correct model
-        prompt = "List the latest 5 ESG regulations or news in 2025 with sources."
-        response = model.generate_content(prompt)
-        return [response.text]  # ✅ You can customize splitting if needed
+        llm = load_llm()
+        prompt = "List the latest 5 ESG regulation updates or news in 2025 with sources."
+        result = llm.invoke(prompt)
+        return [result.content]
     except Exception as e:
-        return [f"Error fetching alerts from Gemini: {e}"]
+        return [f"Error fetching alerts from LLM: {e}"]

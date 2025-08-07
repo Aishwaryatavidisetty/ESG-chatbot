@@ -1,15 +1,6 @@
-# Don't upload virtual environment
-venv/
-
-# Don't upload environment config
-config/config.py
 .env
-
-
-# Don't upload local vector DB
-vector_store/
-
-# __pycache__ and other temp files
 __pycache__/
+vector_store/
 *.pyc
-.DS_Store
+firebase_key.json
+

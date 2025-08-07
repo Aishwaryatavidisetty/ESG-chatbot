@@ -1,7 +1,9 @@
-import google.generativeai as genai
-from config.config import GEMINI_API_KEY
+from langchain_groq import ChatGroq
+from config import GROQ_API_KEY
 
 def load_llm():
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-pro-1.5')
-    return model
+    return ChatGroq(
+        groq_api_key=GROQ_API_KEY,
+        model_name="llama3-8b-8192"
+    )
+

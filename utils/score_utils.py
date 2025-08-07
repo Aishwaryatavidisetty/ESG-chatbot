@@ -12,3 +12,5 @@ def calculate_esg_scores(text):
     for cat in scores:
         scores[cat] = round((scores[cat] / total) * 100, 2)
     return scores
+
+
