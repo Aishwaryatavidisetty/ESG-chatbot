@@ -1,16 +1,10 @@
-from langchain_groq import ChatGroq
-from langchain_core.messages import HumanMessage
-from config.config import GROQ_API_KEY
-
-llm = ChatGroq(
-    api_key=GROQ_API_KEY,
-    model="llama3-70b-8192",  # ✅ Fix here
-)
+from models.llm import load_llm
 
 def fetch_esg_alerts():
+    llm = load_llm()
+    query = "List 3 latest ESG regulation updates (as of 2025) with links"
     try:
-        messages = [HumanMessage(content="Get latest ESG news or regulation updates (2025). Respond briefly.")]
-        response = llm.invoke(messages)
-        return [response.content]
+        response = llm.invoke(query)
+        return response.content.split("\n")
     except Exception as e:
         return [f"Error fetching alerts from LLM: {e}"]

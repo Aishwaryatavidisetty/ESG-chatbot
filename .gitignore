@@ -1,6 +1,4 @@
 .env
 __pycache__/
-vector_store/
 *.pyc
-firebase_key.json
-
+vector_store/
