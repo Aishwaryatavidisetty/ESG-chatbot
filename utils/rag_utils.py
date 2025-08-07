@@ -7,7 +7,7 @@ def answer_with_rag(query, index_path='vector_store/faiss_index', mode="Concise"
     llm = load_llm(mode=mode)  # pass mode to llm loader if applicable
     db = FAISS.load_local(
         index_path,
-        CohereEmbeddings(),
+        CohereEmbeddings(cohere_api_key=COHERE_API_KEY),
         allow_dangerous_deserialization=True
     )
     retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 3})
