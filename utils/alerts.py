@@ -1,17 +1,28 @@
-import requests
+import google.generativeai as genai
 import os
 
 def fetch_esg_alerts():
-    api_key = os.getenv("GOOGLE_API_KEY")
-    cx = os.getenv("GOOGLE_CX")
-    query = "latest ESG regulations 2025"
-    url = f"https://www.googleapis.com/customsearch/v1?q={query}&key={api_key}&cx={cx}"
     try:
-        response = requests.get(url)
-        results = response.json().get("items", [])
-        alerts = []
-        for item in results[:5]:
-            alerts.append(f"**{item['title']}**\n🔗 {item['link']}")
-        return alerts
+        # Load Gemini API Key
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+        # Instantiate Gemini model
+        model = genai.GenerativeModel("gemini-pro")
+
+        # Define the query
+        query = "List the top 5 latest ESG regulations or updates in 2025 with links if available."
+
+        # Get the response
+        response = model.generate_content(query)
+
+        # Extract text
+        content = response.text.strip()
+
+        # Split into list based on line breaks or numbering
+        lines = content.split("\n")
+        alerts = [line for line in lines if line.strip()]
+
+        return alerts[:5] if alerts else ["No alerts found."]
+    
     except Exception as e:
-        return [f"Error fetching alerts: {e}"]
+        return [f"Error fetching alerts from Gemini: {e}"]

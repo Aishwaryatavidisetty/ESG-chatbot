@@ -1,15 +1,14 @@
 streamlit
 langchain
-langchain-openai
 langchain-groq
 langchain-core
 langchain-community
 langchain-google-genai
 google-cloud-firestore
-openai
 cohere
 PyMuPDF
 plotly
 python-dotenv
 sentence-transformers
 google-generativeai
+faiss-cpu
