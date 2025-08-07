@@ -12,3 +12,4 @@ PyMuPDF
 plotly
 python-dotenv
 sentence-transformers
+google-generativeai

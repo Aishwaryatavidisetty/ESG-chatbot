@@ -1,5 +1,7 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
+import google.generativeai as genai
 from config.config import GEMINI_API_KEY
 
 def load_llm():
-    return ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=GEMINI_API_KEY)
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel('gemini-pro')
+    return model
