@@ -6,7 +6,7 @@ from dotenv import load_dotenv # To load environment variables locally
 # --- Custom Module Imports ---
 try:
     from models.llm import load_llm
-    from utils.rag_utils import answer_with_rag
+    from utils.rag_utils import answer_with_rag # This is the line causing the KeyError if __init__.py is missing
     from utils.alerts import fetch_esg_alerts
 except ImportError as e:
     st.error(f"Error importing custom modules: {e}. Please ensure your file structure and module names are correct.")
