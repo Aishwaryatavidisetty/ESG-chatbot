@@ -1,7 +1,8 @@
 from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_cohere import CohereEmbeddings
-from config import COHERE_API_KEY
+from config.config import COHERE_API_KEY
+
 
 def embed_documents(texts, index_path='vector_store/faiss_index'):
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)

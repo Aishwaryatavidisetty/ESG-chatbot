@@ -2,7 +2,7 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain_cohere import CohereEmbeddings
 from models.llm import load_llm
-from config import COHERE_API_KEY
+from config.config import COHERE_API_KEY
 
 def answer_with_rag(query, index_path='vector_store/faiss_index'):
     llm = load_llm()
